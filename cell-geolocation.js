@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const http = require('http');
 const sqlite3 = require('sqlite3');
 const path = require('path');
@@ -65,10 +67,10 @@ http.createServer(function(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
   if (req.method === 'GET' && url.pathname === '/') {
-    if (!url.query.mcc || !url.query.mnc || !url.query.lac || !url.query.cellid) {
+    if (!url.query.mcc || !url.query.mnc || !url.query.lac || !url.query.cell_id) {
       res.writeHead(400);
-      return res.end('Need mcc, mnc, lac, cellid passed in as query parameters');
-    } else if ((url.query.mcc > 999) || (url.query.mnc > 999) || (url.query.lac > 65535) || (url.query.cellid > 268435455)) {
+      return res.end('Need mcc, mnc, lac, cell_id passed in as query parameters');
+    } else if ((url.query.mcc > 999) || (url.query.mnc > 999) || (url.query.lac > 65535) || (url.query.cell_id > 268435455)) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({"lat":defaultLatitude,"lon":defaultLongitude,"range":defaultRange}));
       return;
@@ -80,7 +82,7 @@ http.createServer(function(req, res) {
       1: url.query.mcc,
       2: url.query.mnc,
       3: url.query.lac,
-      4: url.query.cellid
+      4: url.query.cell_id
     }, function(err, row) {
       if (err) {
         console.error('Error querying Mozilla Location Service database');
@@ -95,7 +97,7 @@ http.createServer(function(req, res) {
           1: url.query.mcc,
           2: url.query.mnc,
           3: url.query.lac,
-          4: url.query.cellid
+          4: url.query.cell_id
         }, function(err, row) {
           if (err) {
             console.error('Error querying OpenCellId database');
@@ -110,7 +112,7 @@ http.createServer(function(req, res) {
               1: url.query.mcc,
               2: url.query.mnc,
               3: url.query.lac,
-              4: url.query.cellid
+              4: url.query.cell_id
             }, function(err, row) {
               if (err) {
                 console.error('Error querying OpenCellId cache database');
@@ -125,7 +127,7 @@ http.createServer(function(req, res) {
                   1: url.query.mcc,
                   2: url.query.mnc,
                   3: url.query.lac,
-                  4: url.query.cellid
+                  4: url.query.cell_id
                 }, function(err, row) {
                   if (err) {
                     console.error('Error querying own cache database');
@@ -136,13 +138,13 @@ http.createServer(function(req, res) {
 
                   // -5- if OpenCellId cache database did not have a match, query OpenCellId online service
                   if (typeof row == 'undefined') {
-                    request.oci(url.query.mcc,url.query.mnc,url.query.lac,url.query.cellid, OPENCELLID_API_KEY).then(coords => {
+                    request.oci(url.query.mcc,url.query.mnc,url.query.lac,url.query.cell_id, OPENCELLID_API_KEY).then(coords => {
                       if (coords.statusCode == 200) { // ok
                         uwlDb.run('INSERT INTO cells (mcc, mnc, lac, cellid, lat, lon, range, created_at, updated_at) VALUES(?,?,?,?,?,?,?,?,?)', {
                           1: url.query.mcc,
                           2: url.query.mnc,
                           3: url.query.lac,
-                          4: url.query.cellid,
+                          4: url.query.cell_id,
                           5: coords.lat,
                           6: coords.lon,
                           7: coords.range,
@@ -159,7 +161,7 @@ http.createServer(function(req, res) {
                                       numValidRequests, numMozillaResponses, numOpenCellIdResponses, numUnwiredLabsResponses,
                                       numApproximatedResponses, numDefaultResponses, numApproximatedCells, numUnknownCells,
                                       coords.balance, ip,
-                                      url.query.mcc, url.query.mnc, url.query.lac, url.query.cellid,
+                                      url.query.mcc, url.query.mnc, url.query.lac, url.query.cell_id,
                                       coords.lat, coords.lon, coords.range));
                           numUnwiredLabsResponses++;
                           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -185,7 +187,7 @@ http.createServer(function(req, res) {
                               1: url.query.mcc,
                               2: url.query.mnc,
                               3: url.query.lac,
-                              4: url.query.cellid,
+                              4: url.query.cell_id,
                               5: row.lat,
                               6: row.lon,
                               7: approximatedRange,
@@ -202,7 +204,7 @@ http.createServer(function(req, res) {
                                           numValidRequests, numMozillaResponses, numOpenCellIdResponses, numUnwiredLabsResponses,
                                           numApproximatedResponses, numDefaultResponses, numApproximatedCells, numUnknownCells,
                                           ip, coords.statusCode,
-                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cellid,
+                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cell_id,
                                                      row.lat,row.lon,approximatedRange));
                               numApproximatedResponses++;
                               res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -216,7 +218,7 @@ http.createServer(function(req, res) {
                               1: url.query.mcc,
                               2: url.query.mnc,
                               3: url.query.lac,
-                              4: url.query.cellid,
+                              4: url.query.cell_id,
                               5: defaultLatitude,
                               6: defaultLongitude,
                               7: defaultRange,
@@ -233,7 +235,7 @@ http.createServer(function(req, res) {
                                           numValidRequests, numMozillaResponses, numOpenCellIdResponses, numUnwiredLabsResponses,
                                           numApproximatedResponses, numDefaultResponses, numApproximatedCells, numUnknownCells,
                                           ip, coords.statusCode,
-                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cellid));
+                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cell_id));
                               numDefaultResponses++;
                               res.writeHead(404, { 'Content-Type': 'application/json' });
                               res.end(JSON.stringify({"lat":defaultLatitude,"lon":defaultLongitude,"range":defaultRange}));
@@ -259,7 +261,7 @@ http.createServer(function(req, res) {
                               1: url.query.mcc,
                               2: url.query.mnc,
                               3: url.query.lac,
-                              4: url.query.cellid,
+                              4: url.query.cell_id,
                               5: row.lat,
                               6: row.lon,
                               7: approximatedRange
@@ -274,7 +276,7 @@ http.createServer(function(req, res) {
                                           numValidRequests, numMozillaResponses, numOpenCellIdResponses, numUnwiredLabsResponses,
                                           numApproximatedResponses, numDefaultResponses, numApproximatedCells, numUnknownCells,
                                           ip, coords.statusCode,
-                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cellid,
+                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cell_id,
                                           row.lat, row.lon, approximatedRange));
                               numApproximatedResponses++;
                               res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -288,7 +290,7 @@ http.createServer(function(req, res) {
                               1: url.query.mcc,
                               2: url.query.mnc,
                               3: url.query.lac,
-                              4: url.query.cellid,
+                              4: url.query.cell_id,
                               5: defaultLatitude,
                               6: defaultLongitude,
                               7: defaultRange
@@ -303,7 +305,7 @@ http.createServer(function(req, res) {
                                           numValidRequests, numMozillaResponses, numOpenCellIdResponses, numUnwiredLabsResponses,
                                           numApproximatedResponses, numDefaultResponses, numApproximatedCells, numUnknownCells,
                                           ip, coords.statusCode,
-                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cellid));
+                                          url.query.mcc, url.query.mnc, url.query.lac, url.query.cell_id));
                               numDefaultResponses++;
                               res.writeHead(404, { 'Content-Type': 'application/json' });
                               res.end(JSON.stringify({"lat":defaultLatitude,"lon":defaultLongitude,"range":defaultRange}));
