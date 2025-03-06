@@ -10,4 +10,4 @@ cat oci_cells-cleanup.sql | sqlite3 oci_cells.sqlite
 
 systemctl start cell-geolocation.service
 
-scp update.html root@server:/var/www/html/opencellid/update.html
+scp update.html root@192.168.88.238:/var/www/html/opencellidgps4pets.de/update.html
