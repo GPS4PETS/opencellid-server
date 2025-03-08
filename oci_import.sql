@@ -1,2 +1,2 @@
 .separator ","
-.import oci_cells.csv cells
+.import /root/cell-geolocation/oci_cells.csv cells
